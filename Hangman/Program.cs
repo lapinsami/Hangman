@@ -2,11 +2,12 @@
 
 internal static class Program
 {
-    private static string secretWord = "muukalaislegioona";
-    private static string revealedWord = new string('*', secretWord.Length);
+    private static string secretWord = "sequence";
+    private static string revealedWord = new('*', secretWord.Length);
     private static char[] secretWordArray = secretWord.ToCharArray();
     private static char[] revealedWordArray = revealedWord.ToCharArray();
     private static int numberOfGuesses = 0;
+    private static int numberOfMistakes = 0;
     private static List<char> guessHistory = [];
     private static string playerName = "player";
 
@@ -17,7 +18,7 @@ internal static class Program
         ShutDown();
     }
 
-    static void MainGameLoop()
+    private static void MainGameLoop()
     {
         while (true)
         {
@@ -31,31 +32,44 @@ internal static class Program
             }
             
             guessHistory.Add(guess);
+            bool guessWasCorrect = false;
 
             for (var i = 0; i < secretWordArray.Length; i++)
             {
                 if (guess == secretWordArray[i])
                 {
                     revealedWordArray[i] = guess;
+                    guessWasCorrect = true;
                 }
+            }
+
+            if (!guessWasCorrect)
+            {
+                numberOfMistakes++;
             }
 
             if (CheckForWin())
             {
                 break;
             }
+
+            if (CheckForLoss())
+            {
+                break;
+            }
         }
     }
 
-    static void StartUp()
+    private static void StartUp()
     {
         playerName = AskForUserName();
     }
 
-    static void ShutDown()
+    private static void ShutDown()
     {
         PrintGame();
-        Console.WriteLine($"Thanks for playing {playerName}");
+        Console.WriteLine(CheckForLoss() ? "\nYou Lose..." : "\nYou Win!");
+        Console.WriteLine($"\nThanks for playing {playerName}");
         ConfirmExit();
     }
 
@@ -65,13 +79,18 @@ internal static class Program
         Console.ReadKey(true);
     }
 
-    static bool CheckForWin()
+    private static bool CheckForWin()
     {
         // Compares each element in the arrays and return true only if all are equal
         return revealedWordArray.SequenceEqual(secretWordArray);
     }
 
-    static string AskForUserName()
+    private static bool CheckForLoss()
+    {
+        return numberOfMistakes >= 6;
+    }
+
+    private static string AskForUserName()
     {
         string? name = null;
         Console.Write("Name: ");
@@ -84,7 +103,7 @@ internal static class Program
         return name;
     }
 
-    static char AskForLetter()
+    private static char AskForLetter()
     {
         Console.Write("\nChoose a letter: ");
 
@@ -93,15 +112,17 @@ internal static class Program
             var guess = Console.ReadLine();
             Console.WriteLine();
 
-            if (guess is "quit" or "exit")
+            switch (guess)
             {
-                return '0';
+                case "quit" or "exit":
+                    return '0';
+                case null:
+                    Console.Write("Please select a single letter: ");
+                    continue;
             }
-            if (guess == null)
-            {
-                Console.Write("Please select a single letter: ");
-                continue;
-            }
+
+            guess = guess.ToLower();
+
             if (guess.Length != 1)
             {
                 Console.Write("Please select a single letter: ");
@@ -128,12 +149,19 @@ internal static class Program
         Console.Clear();
         
         PrintHeader();
+        // 1st row of hangman
+        Console.WriteLine(" H======    ");
+        // 2nd row of hangman
+        Console.WriteLine(" H/    |    ");
+        // 3rd row of hangman
+        Console.Write(" H     O    ");
         
-        Console.Write("#  ");
+        Console.Write(new string(' ', int.Max(2, 11 - revealedWordArray.Length / 2)));
         PrintRevealedWord();
-        Console.Write("  #\n");
+        Console.Write("\n");
         
         PrintFooter();
+        PrintKeyboard();
         
     }
 
@@ -141,14 +169,9 @@ internal static class Program
     {
         foreach (var c in revealedWordArray)
         {
-            if (c == '*')
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-            }
+            // Ternary
+            // if c == '*' then gray else green
+            Console.ForegroundColor = c == '*' ? ConsoleColor.DarkGray : ConsoleColor.Green;
             
             Console.Write(c);
             Console.ForegroundColor = ConsoleColor.White;
@@ -158,36 +181,94 @@ internal static class Program
     private static void PrintGuessHistory()
     {
         Console.Write("Guesses: ");
-        for (int i = 0; i < guessHistory.Count; i++)
+        foreach (var guess in guessHistory)
         {
-            if (secretWordArray.Contains(guessHistory[i]))
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-            }
+            // Ternary
+            // if guess in array then green else red
+            Console.ForegroundColor = secretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
+            Console.Write($"{guess} ");
             
-            Console.Write($"{guessHistory[i]} ");
             Console.ForegroundColor = ConsoleColor.White;
         }
         Console.Write($"({numberOfGuesses})");
+        Console.Write($"\nMistakes: {numberOfMistakes}");
+    }
+
+    private static void PrintKeyboard()
+    {
+        // Keyboard is 24 characters wide total
+        
+        const string keyboardTop = "qwertyuiopå";
+        const string keyboardMid = "asdfghjklöä";
+        const string keyboardBot = "zxcvbnm";
+        
+        // 5th row of hangman
+        Console.Write(" H    / \\   ");
+        
+        Console.Write(" ");
+
+        foreach (var letter in keyboardTop)
+        {
+            if (guessHistory.Contains(letter))
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+            
+            Console.Write($"{letter} ");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        
+        Console.Write(" ");
+        Console.Write("\n");
+        
+        // 6th row of hangman
+        Console.Write(" H          ");
+        
+        Console.Write("  ");
+        
+        foreach (var letter in keyboardMid)
+        {
+            if (guessHistory.Contains(letter))
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+            
+            Console.Write($"{letter} ");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        
+        Console.Write("\n");
+        
+        // 7th row of hangman
+        Console.Write("/_\\         ");
+        
+        Console.Write("   ");
+        
+        foreach (var letter in keyboardBot)
+        {
+            if (guessHistory.Contains(letter))
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+            
+            Console.Write($"{letter} ");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        
+        Console.Write("       ");
+        Console.Write("\n");
     }
 
     private static void PrintHeader()
     {
-        Console.WriteLine("HANGMAN");
-        PrintGuessHistory();
+        Console.WriteLine("               HANGMAN");
+        //PrintGuessHistory();
         Console.WriteLine();
-
-        Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
-        Console.WriteLine($"# {new string(' ', revealedWordArray.Length + 2)} #");
     }
 
     private static void PrintFooter()
     {
-        Console.WriteLine($"# {new string(' ', revealedWordArray.Length + 2)} #");
-        Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
+        // 4th row of hangman
+        Console.WriteLine(" H    -|-   ");
     }
 }
