@@ -13,9 +13,38 @@ internal static class Program
     private static void Main()
     {
         StartUp();
-        PrintGame();
-        revealedWordArray[3] = 'k';
+        MainGameLoop();
         ShutDown();
+    }
+
+    static void MainGameLoop()
+    {
+        while (true)
+        {
+            PrintGame();
+
+            var guess = AskForLetter();
+
+            if (guess == '0')
+            {
+                break;
+            }
+            
+            guessHistory.Add(guess);
+
+            for (var i = 0; i < secretWordArray.Length; i++)
+            {
+                if (guess == secretWordArray[i])
+                {
+                    revealedWordArray[i] = guess;
+                }
+            }
+
+            if (CheckForWin())
+            {
+                break;
+            }
+        }
     }
 
     static void StartUp()
@@ -55,6 +84,45 @@ internal static class Program
         return name;
     }
 
+    static char AskForLetter()
+    {
+        Console.Write("\nChoose a letter: ");
+
+        while (true)
+        {
+            var guess = Console.ReadLine();
+            Console.WriteLine();
+
+            if (guess is "quit" or "exit")
+            {
+                return '0';
+            }
+            if (guess == null)
+            {
+                Console.Write("Please select a single letter: ");
+                continue;
+            }
+            if (guess.Length != 1)
+            {
+                Console.Write("Please select a single letter: ");
+                continue;
+            }
+            if (!char.IsLetter(guess[0]))
+            {
+                Console.Write("Please select a single letter: ");
+                continue;
+            }
+            if (guessHistory.Contains(guess[0]))
+            {
+                Console.Write("Letter has already been used. Try again: ");
+                continue;
+            }
+
+            numberOfGuesses++;
+            return guess[0];
+        }
+    }
+
     private static void PrintGame()
     {
         Console.Clear();
@@ -87,11 +155,30 @@ internal static class Program
         }
     }
 
+    private static void PrintGuessHistory()
+    {
+        Console.Write("Guesses: ");
+        for (int i = 0; i < guessHistory.Count; i++)
+        {
+            if (secretWordArray.Contains(guessHistory[i]))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+            }
+            
+            Console.Write($"{guessHistory[i]} ");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        Console.Write($"({numberOfGuesses})");
+    }
+
     private static void PrintHeader()
     {
         Console.WriteLine("HANGMAN");
-        Console.WriteLine("\"quit\" to quit");
-        Console.WriteLine($"Guesses: {numberOfGuesses} ({string.Join(", ", guessHistory)})");
+        PrintGuessHistory();
         Console.WriteLine();
 
         Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
