@@ -1,6 +1,6 @@
 ﻿namespace Hangman;
 
-class Program
+internal static class Program
 {
     private static string secretWord = "muukalaislegioona";
     private static string revealedWord = new string('*', secretWord.Length);
@@ -10,12 +10,24 @@ class Program
     private static List<char> guessHistory = [];
     private static string playerName = "player";
 
-    static void Main()
+    private static void Main()
     {
         PrintGame();
+        ConfirmExit();
     }
 
-    static void PrintGame()
+    private static void ConfirmExit()
+    {
+        Console.WriteLine("Press any key to close");
+        Console.ReadKey(true);
+    }
+
+    static bool CheckForWin()
+    {
+        return revealedWordArray.SequenceEqual(secretWordArray);
+    }
+
+    private static void PrintGame()
     {
         Console.Clear();
         Console.WriteLine("HANGMAN");
@@ -33,11 +45,8 @@ class Program
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.White;
-            }
             Console.Write(c);
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
         Console.Write("  #\n");
