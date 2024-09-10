@@ -150,11 +150,21 @@ internal static class Program
         
         PrintHeader();
         // 1st row of hangman
+        Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine(" H======    ");
         // 2nd row of hangman
         Console.WriteLine(" H/    |    ");
         // 3rd row of hangman
-        Console.Write(" H     O    ");
+        Console.Write(" H     ");
+
+        if (numberOfMistakes >= 1)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("O    ");
+        
+        Console.ForegroundColor = ConsoleColor.White;
         
         Console.Write(new string(' ', int.Max(2, 11 - revealedWordArray.Length / 2)));
         PrintRevealedWord();
@@ -190,8 +200,8 @@ internal static class Program
             
             Console.ForegroundColor = ConsoleColor.White;
         }
-        Console.Write($"({numberOfGuesses})");
-        Console.Write($"\nMistakes: {numberOfMistakes}");
+        //Console.Write($"({numberOfGuesses})");
+        //Console.Write($"\nMistakes: {numberOfMistakes}");
     }
 
     private static void PrintKeyboard()
@@ -203,7 +213,26 @@ internal static class Program
         const string keyboardBot = "zxcvbnm";
         
         // 5th row of hangman
-        Console.Write(" H    / \\   ");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(" H    ");
+        
+        if (numberOfMistakes >= 5)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("/ ");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        if (numberOfMistakes >= 6)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("\\   ");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        Console.ForegroundColor = ConsoleColor.White;
         
         Console.Write(" ");
 
@@ -222,7 +251,9 @@ internal static class Program
         Console.Write("\n");
         
         // 6th row of hangman
+        Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write(" H          ");
+        Console.ForegroundColor = ConsoleColor.White;
         
         Console.Write("  ");
         
@@ -240,7 +271,9 @@ internal static class Program
         Console.Write("\n");
         
         // 7th row of hangman
+        Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write("/_\\         ");
+        Console.ForegroundColor = ConsoleColor.White;
         
         Console.Write("   ");
         
@@ -262,13 +295,40 @@ internal static class Program
     private static void PrintHeader()
     {
         Console.WriteLine("               HANGMAN");
-        //PrintGuessHistory();
+        Console.WriteLine("------------------------------------");
+        PrintGuessHistory();
         Console.WriteLine();
     }
 
     private static void PrintFooter()
     {
         // 4th row of hangman
-        Console.WriteLine(" H    -|-   ");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(" H    ");
+        
+        if (numberOfMistakes >= 3)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("-");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        if (numberOfMistakes >= 2)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("|");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        if (numberOfMistakes >= 4)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("-   \n");
+        
+        Console.ForegroundColor = ConsoleColor.White;
     }
 }
