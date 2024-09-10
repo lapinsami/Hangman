@@ -12,7 +12,20 @@ internal static class Program
 
     private static void Main()
     {
+        StartUp();
         PrintGame();
+        ShutDown();
+    }
+
+    static void StartUp()
+    {
+        playerName = AskForUserName();
+    }
+
+    static void ShutDown()
+    {
+        PrintGame();
+        Console.WriteLine($"Thanks for playing {playerName}");
         ConfirmExit();
     }
 
@@ -24,7 +37,21 @@ internal static class Program
 
     static bool CheckForWin()
     {
+        // Compares each element in the arrays and return true only if all are equal
         return revealedWordArray.SequenceEqual(secretWordArray);
+    }
+
+    static string AskForUserName()
+    {
+        string? name = null;
+        Console.Write("Name: ");
+
+        while (name == null)
+        {
+            name = Console.ReadLine();
+        }
+
+        return name;
     }
 
     private static void PrintGame()
@@ -45,6 +72,11 @@ internal static class Program
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            
             Console.Write(c);
             Console.ForegroundColor = ConsoleColor.White;
         }
