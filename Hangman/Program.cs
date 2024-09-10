@@ -14,6 +14,7 @@ internal static class Program
     {
         StartUp();
         PrintGame();
+        revealedWordArray[3] = 'k';
         ShutDown();
     }
 
@@ -57,15 +58,19 @@ internal static class Program
     private static void PrintGame()
     {
         Console.Clear();
-        Console.WriteLine("HANGMAN");
-        Console.WriteLine("\"quit\" to quit");
-        Console.WriteLine($"Guesses: {numberOfGuesses} ({string.Join(", ", guessHistory)})");
-        Console.WriteLine();
-
-        Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
-        Console.WriteLine($"# {new string(' ', revealedWordArray.Length + 2)} #");
+        
+        PrintHeader();
+        
         Console.Write("#  ");
+        PrintRevealedWord();
+        Console.Write("  #\n");
+        
+        PrintFooter();
+        
+    }
 
+    private static void PrintRevealedWord()
+    {
         foreach (var c in revealedWordArray)
         {
             if (c == '*')
@@ -80,8 +85,21 @@ internal static class Program
             Console.Write(c);
             Console.ForegroundColor = ConsoleColor.White;
         }
+    }
 
-        Console.Write("  #\n");
+    private static void PrintHeader()
+    {
+        Console.WriteLine("HANGMAN");
+        Console.WriteLine("\"quit\" to quit");
+        Console.WriteLine($"Guesses: {numberOfGuesses} ({string.Join(", ", guessHistory)})");
+        Console.WriteLine();
+
+        Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
+        Console.WriteLine($"# {new string(' ', revealedWordArray.Length + 2)} #");
+    }
+
+    private static void PrintFooter()
+    {
         Console.WriteLine($"# {new string(' ', revealedWordArray.Length + 2)} #");
         Console.WriteLine($"{new string('#', revealedWordArray.Length + 6)}");
     }
