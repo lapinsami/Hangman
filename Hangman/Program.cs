@@ -55,6 +55,7 @@ internal static class Program
 
             if (CheckForLoss())
             {
+                revealedWordArray = secretWordArray;
                 break;
             }
         }
@@ -62,6 +63,8 @@ internal static class Program
 
     private static void StartUp()
     {
+        PrintGame();
+        Console.WriteLine();
         playerName = AskForUserName();
     }
 
@@ -117,6 +120,8 @@ internal static class Program
                 case "quit" or "exit":
                     return '0';
                 case null:
+                    Console.Clear();
+                    PrintGame();
                     Console.Write("Please select a single letter: ");
                     continue;
             }
@@ -125,16 +130,22 @@ internal static class Program
 
             if (guess.Length != 1)
             {
+                Console.Clear();
+                PrintGame();
                 Console.Write("Please select a single letter: ");
                 continue;
             }
             if (!char.IsLetter(guess[0]))
             {
+                Console.Clear();
+                PrintGame();
                 Console.Write("Please select a single letter: ");
                 continue;
             }
             if (guessHistory.Contains(guess[0]))
             {
+                Console.Clear();
+                PrintGame();
                 Console.Write("Letter has already been used. Try again: ");
                 continue;
             }
@@ -148,7 +159,10 @@ internal static class Program
     {
         Console.Clear();
         
-        PrintHeader();
+        Console.WriteLine("               HANGMAN");
+        Console.WriteLine("------------------------------------");
+        PrintGuessHistory();
+        Console.WriteLine();
         // 1st row of hangman
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine(" H======    ");
@@ -170,7 +184,35 @@ internal static class Program
         PrintRevealedWord();
         Console.Write("\n");
         
-        PrintFooter();
+        // 4th row of hangman
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(" H    ");
+        
+        if (numberOfMistakes >= 3)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("-");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        if (numberOfMistakes >= 2)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("|");
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        
+        if (numberOfMistakes >= 4)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+        }
+        
+        Console.Write("-   \n");
+        
+        Console.ForegroundColor = ConsoleColor.White;
+        
         PrintKeyboard();
         
     }
@@ -290,45 +332,5 @@ internal static class Program
         
         Console.Write("       ");
         Console.Write("\n");
-    }
-
-    private static void PrintHeader()
-    {
-        Console.WriteLine("               HANGMAN");
-        Console.WriteLine("------------------------------------");
-        PrintGuessHistory();
-        Console.WriteLine();
-    }
-
-    private static void PrintFooter()
-    {
-        // 4th row of hangman
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write(" H    ");
-        
-        if (numberOfMistakes >= 3)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-        }
-        
-        Console.Write("-");
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        
-        if (numberOfMistakes >= 2)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-        }
-        
-        Console.Write("|");
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        
-        if (numberOfMistakes >= 4)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-        }
-        
-        Console.Write("-   \n");
-        
-        Console.ForegroundColor = ConsoleColor.White;
     }
 }
