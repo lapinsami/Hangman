@@ -2,7 +2,7 @@
 
 internal static class Program
 {
-    private static string secretWord = "muukalaislegioona";
+    private static string secretWord = "??????";
     private static string revealedWord = new('*', secretWord.Length);
     private static char[] secretWordArray = secretWord.ToCharArray();
     private static char[] revealedWordArray = revealedWord.ToCharArray();
@@ -61,6 +61,11 @@ internal static class Program
         Console.WriteLine();
         playerName = AskForUserName();
         language = AskForLanguage();
+        
+        secretWord = GetRandomWord(language);
+        revealedWord = new('*', secretWord.Length);
+        secretWordArray = secretWord.ToCharArray();
+        revealedWordArray = revealedWord.ToCharArray();
     }
 
     private static string AskForLanguage()
@@ -86,6 +91,14 @@ internal static class Program
 
             return input;
         }
+    }
+
+    private static string GetRandomWord(string lang)
+    {
+        string[] dictionary = File.ReadAllLines($"../../../../{lang}.txt");
+        int i = Random.Shared.Next(dictionary.Length);
+
+        return dictionary[i];
     }
 
     private static void ShutDown()
