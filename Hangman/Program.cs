@@ -96,9 +96,17 @@ internal static class Program
     private static string GetRandomWord(string lang)
     {
         string[] dictionary = File.ReadAllLines($"../../../../{lang}.txt");
-        int i = Random.Shared.Next(dictionary.Length);
 
-        return dictionary[i];
+        while (true)
+        {
+            int i = Random.Shared.Next(dictionary.Length);
+            string word = dictionary[i];
+
+            if (word.All(char.IsLetter) && word.Length > 3)
+            {
+                return word;
+            }
+        }
     }
 
     private static void ShutDown()
