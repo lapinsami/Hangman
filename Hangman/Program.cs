@@ -2,7 +2,7 @@
 
 internal static class Program
 {
-    private static string secretWord = "sequence";
+    private static string secretWord = "muukalaislegioona";
     private static string revealedWord = new('*', secretWord.Length);
     private static char[] secretWordArray = secretWord.ToCharArray();
     private static char[] revealedWordArray = revealedWord.ToCharArray();
@@ -10,6 +10,7 @@ internal static class Program
     private static int numberOfMistakes = 0;
     private static List<char> guessHistory = [];
     private static string playerName = "player";
+    private static string language = "en";
 
     private static void Main()
     {
@@ -23,14 +24,7 @@ internal static class Program
         while (true)
         {
             PrintGame();
-
             var guess = AskForLetter();
-
-            if (guess == '0')
-            {
-                break;
-            }
-            
             guessHistory.Add(guess);
             bool guessWasCorrect = false;
 
@@ -66,6 +60,32 @@ internal static class Program
         PrintGame();
         Console.WriteLine();
         playerName = AskForUserName();
+        language = AskForLanguage();
+    }
+
+    private static string AskForLanguage()
+    {
+        string[] validLanguages = ["en", "sv", "fi"];
+        Console.Write("Language used for the dictionary (en, sv, fi): ");
+
+        while (true)
+        {
+            string? input = Console.ReadLine();
+
+            if (input == null)
+            {
+                Console.Write("Try again: ");
+                continue;
+            }
+
+            if (!validLanguages.Contains(input))
+            {
+                Console.Write("Not a valid language. Try again: ");
+                continue;
+            }
+
+            return input;
+        }
     }
 
     private static void ShutDown()
@@ -84,7 +104,6 @@ internal static class Program
 
     private static bool CheckForWin()
     {
-        // Compares each element in the arrays and return true only if all are equal
         return revealedWordArray.SequenceEqual(secretWordArray);
     }
 
@@ -95,15 +114,26 @@ internal static class Program
 
     private static string AskForUserName()
     {
-        string? name = null;
         Console.Write("Name: ");
 
-        while (name == null)
+        while (true)
         {
-            name = Console.ReadLine();
-        }
+            string? input = Console.ReadLine();
 
-        return name;
+            if (input == null)
+            {
+                Console.Write("Try again: ");
+                continue;
+            }
+
+            if (input.Length < 2)
+            {
+                Console.Write("Name must be 2 characters or longer. Try again: ");
+                continue;
+            }
+
+            return input;
+        }
     }
 
     private static char AskForLetter()
@@ -115,37 +145,39 @@ internal static class Program
             var guess = Console.ReadLine();
             Console.WriteLine();
 
-            switch (guess)
+            if (guess == null)
             {
-                case "quit" or "exit":
-                    return '0';
-                case null:
-                    Console.Clear();
-                    PrintGame();
-                    Console.Write("Please select a single letter: ");
-                    continue;
+                Console.Clear();
+                PrintGame();
+                Console.WriteLine();
+                Console.Write("Please select a single letter: ");
+                continue;
             }
-
-            guess = guess.ToLower();
 
             if (guess.Length != 1)
             {
                 Console.Clear();
                 PrintGame();
+                Console.WriteLine();
                 Console.Write("Please select a single letter: ");
                 continue;
             }
+            
             if (!char.IsLetter(guess[0]))
             {
                 Console.Clear();
                 PrintGame();
+                Console.WriteLine();
                 Console.Write("Please select a single letter: ");
                 continue;
             }
+            
+            guess = guess.ToLower();
             if (guessHistory.Contains(guess[0]))
             {
                 Console.Clear();
                 PrintGame();
+                Console.WriteLine();
                 Console.Write("Letter has already been used. Try again: ");
                 continue;
             }
@@ -159,7 +191,7 @@ internal static class Program
     {
         Console.Clear();
         
-        Console.WriteLine("               HANGMAN");
+        Console.WriteLine($"               HANGMAN            {language}");
         Console.WriteLine("------------------------------------");
         PrintGuessHistory();
         Console.WriteLine();
@@ -181,7 +213,9 @@ internal static class Program
         Console.ForegroundColor = ConsoleColor.White;
         
         Console.Write(new string(' ', int.Max(2, 11 - revealedWordArray.Length / 2)));
+        
         PrintRevealedWord();
+        
         Console.Write("\n");
         
         // 4th row of hangman
@@ -213,41 +247,6 @@ internal static class Program
         
         Console.ForegroundColor = ConsoleColor.White;
         
-        PrintKeyboard();
-        
-    }
-
-    private static void PrintRevealedWord()
-    {
-        foreach (var c in revealedWordArray)
-        {
-            // Ternary
-            // if c == '*' then gray else green
-            Console.ForegroundColor = c == '*' ? ConsoleColor.DarkGray : ConsoleColor.Green;
-            
-            Console.Write(c);
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-    }
-
-    private static void PrintGuessHistory()
-    {
-        Console.Write("Guesses: ");
-        foreach (var guess in guessHistory)
-        {
-            // Ternary
-            // if guess in array then green else red
-            Console.ForegroundColor = secretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
-            Console.Write($"{guess} ");
-            
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-        //Console.Write($"({numberOfGuesses})");
-        //Console.Write($"\nMistakes: {numberOfMistakes}");
-    }
-
-    private static void PrintKeyboard()
-    {
         // Keyboard is 24 characters wide total
         
         const string keyboardTop = "qwertyuiopå";
@@ -332,5 +331,42 @@ internal static class Program
         
         Console.Write("       ");
         Console.Write("\n");
+        
+    }
+
+    private static void PrintRevealedWord()
+    {
+        foreach (var c in revealedWordArray)
+        {
+            if (c == '*')
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+            else if (guessHistory.Contains(c))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+            
+            Console.Write(c);
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+    }
+
+    private static void PrintGuessHistory()
+    {
+        Console.Write("Guesses: ");
+        foreach (var guess in guessHistory)
+        {
+            // Ternary
+            // if guess in array then green else red
+            Console.ForegroundColor = secretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
+            Console.Write($"{guess} ");
+            
+            Console.ForegroundColor = ConsoleColor.White;
+        }
     }
 }
