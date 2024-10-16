@@ -95,7 +95,21 @@ internal static class Program
 
     private static string GetRandomWord(string lang)
     {
-        string[] dictionary = File.ReadAllLines($"../../../../{lang}.txt");
+        string[] dictionary;
+        
+        try
+        {
+            dictionary = File.ReadAllLines($"../../../../{lang}.txt");
+        }
+        catch (FileNotFoundException e)
+        {
+            dictionary = ["competence", "sequence", "numerical", "sunglasses", "jewelry"];
+        }
+        catch (Exception e)
+        {
+            dictionary = ["competence", "sequence", "numerical", "sunglasses", "jewelry"];
+            Console.WriteLine($"Something went wrong.\n{e}");
+        }
 
         while (true)
         {
@@ -382,8 +396,6 @@ internal static class Program
         Console.Write("Guesses: ");
         foreach (var guess in guessHistory)
         {
-            // Ternary
-            // if guess in array then green else red
             Console.ForegroundColor = secretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
             Console.Write($"{guess} ");
             
