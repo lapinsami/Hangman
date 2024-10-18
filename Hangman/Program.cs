@@ -1,4 +1,6 @@
-﻿namespace Hangman;
+﻿using System.Text.Json;
+
+namespace Hangman;
 
 internal static class Program
 {
@@ -11,6 +13,8 @@ internal static class Program
     private static List<char> guessHistory = [];
     private static string playerName = "player";
     private static string language = "en";
+    private static string jsonLocation = "../../../../scores.json";
+    private static List<Score> scores = [];
 
     private static void Main()
     {
@@ -57,6 +61,27 @@ internal static class Program
 
     private static void StartUp()
     {
+        // Reading scores from json if it exists
+        string? scoresAsJsonString;
+
+        try
+        {
+            scoresAsJsonString = File.ReadAllText(jsonLocation);
+        }
+        catch (FileNotFoundException e)
+        {
+            scoresAsJsonString = null;
+        }
+
+        if (string.IsNullOrEmpty(scoresAsJsonString))
+        {
+            scores = [];
+        }
+        else
+        {
+            scores = JsonSerializer.Deserialize<List<Score>>(scoresAsJsonString);
+        }
+        
         PrintGame();
         Console.WriteLine();
         playerName = AskForUserName();
@@ -125,9 +150,48 @@ internal static class Program
 
     private static void ShutDown()
     {
+        // writing scores to json if the player did not lose
+        if (!CheckForLoss())
+        {
+            Score s = new Score
+            {
+                Name = playerName,
+                Word = secretWord,
+                NumberOfGuesses = numberOfGuesses,
+                WordLength = secretWord.Length,
+                NumberOfMistakes = numberOfMistakes
+            };
+        
+            scores.Add(s);
+
+            string scoresAsJsonString = JsonSerializer.Serialize(scores);
+            File.WriteAllText(jsonLocation,scoresAsJsonString);
+        }
+
         PrintGame();
         Console.WriteLine(CheckForLoss() ? "\nYou Lose..." : "\nYou Win!");
         Console.WriteLine($"\nThanks for playing {playerName}");
+        
+        // sorting and printing scores if they exist
+
+        if (scores.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Highscores:");
+            
+            // sorting by number of mistakes and then by the length of the word (longer words are easier)
+            List<Score> sortedScores = scores.OrderBy(o=>o.NumberOfMistakes)
+                .ThenBy(o=>o.WordLength)
+                .ToList();
+
+            foreach (Score score in sortedScores)
+            {
+                Console.WriteLine($"    {score.Name}: {score.NumberOfMistakes} mistakes - {score.Word}");
+            }
+
+            Console.WriteLine();
+        }
+        
         ConfirmExit();
     }
 
@@ -222,6 +286,7 @@ internal static class Program
         }
     }
 
+    // it's a mess
     private static void PrintGame()
     {
         Console.Clear();
