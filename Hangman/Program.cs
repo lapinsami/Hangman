@@ -84,10 +84,8 @@ internal static class Program
         game.PlayerName = AskForUserName();
         game.Language = AskForLanguage();
         
-        //game.SecretWord = GetRandomWord(game.Language);
-        //game.RevealedWord = new('*', game.SecretWord.Length);
         game.SecretWordArray = GetRandomWord(game.Language).ToCharArray();
-        game.RevealedWordArray = game.SecretWordArray;
+        game.RevealedWordArray = new char[game.SecretWordArray.Length];
         Array.Fill(game.RevealedWordArray, '*');
         
         game.GuessHistory = [];
