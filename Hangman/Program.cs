@@ -5,9 +5,9 @@ namespace Hangman;
 internal static class Program
 {
     // relative paths from Hangman/Hangman/bin/Debug/net8.0/
-    private static string dictionaryLocation = "../../../../"; // file name missing because it depends on a variable
-    private static string jsonLocation = "../../../../scores.json";
-    private static List<GameInstance> gameHistory = [];
+    private const string DictionaryLocation = "../../../../"; // file name missing because it depends on a variable
+    private const string JsonLocation = "../../../../scores.json";
+    private static List<GameInstance> _gameHistory = [];
 
     private static void Main()
     {
@@ -22,11 +22,11 @@ internal static class Program
         {
             PrintGame(game);
             
-            var guess = AskForLetter(game);
+            char guess = AskForLetter(game);
             game.GuessHistory.Add(guess);
             bool guessWasCorrect = false;
 
-            for (var i = 0; i < game.SecretWordArray.Length; i++)
+            for (int i = 0; i < game.SecretWordArray.Length; i++)
             {
                 if (guess == game.SecretWordArray[i])
                 {
@@ -61,7 +61,7 @@ internal static class Program
 
         try
         {
-            scoresAsJsonString = File.ReadAllText(jsonLocation);
+            scoresAsJsonString = File.ReadAllText(JsonLocation);
         }
         catch (FileNotFoundException e)
         {
@@ -70,24 +70,25 @@ internal static class Program
 
         if (string.IsNullOrEmpty(scoresAsJsonString))
         {
-            gameHistory = [];
+            _gameHistory = [];
         }
         else
         {
-            gameHistory = JsonSerializer.Deserialize<List<GameInstance>>(scoresAsJsonString) ?? [];
+            _gameHistory = JsonSerializer.Deserialize<List<GameInstance>>(scoresAsJsonString) ?? [];
         }
         
         Console.WriteLine();
 
-        GameInstance game = new GameInstance();
+        GameInstance game = new();
         
         game.PlayerName = AskForUserName();
         game.Language = AskForLanguage();
         
-        game.SecretWord = GetRandomWord(game.Language);
-        game.RevealedWord = new('*', game.SecretWord.Length);
-        game.SecretWordArray = game.SecretWord.ToCharArray();
-        game.RevealedWordArray = game.RevealedWord.ToCharArray();
+        //game.SecretWord = GetRandomWord(game.Language);
+        //game.RevealedWord = new('*', game.SecretWord.Length);
+        game.SecretWordArray = GetRandomWord(game.Language).ToCharArray();
+        game.RevealedWordArray = game.SecretWordArray;
+        Array.Fill(game.RevealedWordArray, '*');
         
         game.GuessHistory = [];
         game.NumberOfGuesses = 0;
@@ -123,7 +124,7 @@ internal static class Program
 
     private static string GetRandomWord(string lang)
     {
-        string[] dictionary = File.ReadAllLines(dictionaryLocation + lang + ".txt");
+        string[] dictionary = File.ReadAllLines(DictionaryLocation + lang + ".txt");
 
         while (true)
         {
@@ -144,10 +145,10 @@ internal static class Program
         // writing scores to json if the player did not lose
         if (!CheckForLoss(game))
         {
-            gameHistory.Add(game);
+            _gameHistory.Add(game);
 
-            string scoresAsJsonString = JsonSerializer.Serialize(gameHistory);
-            File.WriteAllText(jsonLocation,scoresAsJsonString);
+            string scoresAsJsonString = JsonSerializer.Serialize(_gameHistory);
+            File.WriteAllText(JsonLocation,scoresAsJsonString);
         }
 
         PrintGame(game);
@@ -156,13 +157,13 @@ internal static class Program
         
         // sorting and printing scores if they exist
 
-        if (gameHistory.Count > 0)
+        if (_gameHistory.Count > 0)
         {
             Console.WriteLine();
-            Console.WriteLine("Highscores:");
+            Console.WriteLine("High scores:");
             
             // sorting by number of mistakes and then by the length of the word (longer words are easier)
-            List<GameInstance> sortedGames = gameHistory.OrderBy(o=>o.NumberOfMistakes)
+            List<GameInstance> sortedGames = _gameHistory.OrderBy(o=>o.NumberOfMistakes)
                 .ThenBy(o=>o.SecretWordArray.Length)
                 .ToList();
 
@@ -361,7 +362,7 @@ internal static class Program
         
         Console.Write(" ");
 
-        foreach (var letter in keyboardTop)
+        foreach (char letter in keyboardTop)
         {
             if (game.GuessHistory.Contains(letter))
             {
@@ -442,15 +443,9 @@ internal static class Program
 
     private static void PrintGuessHistory(GameInstance game)
     {
-        if (game.GuessHistory.Count < 1)
-        {
-            Console.Write("-");
-            return;
-        }
-        
         Console.Write("Guesses: ");
         
-        foreach (var guess in game.GuessHistory)
+        foreach (char guess in game.GuessHistory)
         {
             Console.ForegroundColor = game.SecretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
             Console.Write($"{guess} ");
