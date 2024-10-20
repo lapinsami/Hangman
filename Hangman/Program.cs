@@ -4,64 +4,56 @@ namespace Hangman;
 
 internal static class Program
 {
-    private static string secretWord = "??????";
-    private static string revealedWord = new('*', secretWord.Length);
-    private static char[] secretWordArray = secretWord.ToCharArray();
-    private static char[] revealedWordArray = revealedWord.ToCharArray();
-    private static int numberOfGuesses = 0;
-    private static int numberOfMistakes = 0;
-    private static List<char> guessHistory = [];
-    private static string playerName = "player";
-    private static string language = "en";
-    private static string dictionaryLocation = $"../../../../{language}.txt";
+    // relative paths from Hangman/Hangman/bin/Debug/net8.0/
+    private static string dictionaryLocation = "../../../../"; // file name missing because it depends on a variable
     private static string jsonLocation = "../../../../scores.json";
-    private static List<Score> scores = [];
+    private static List<GameInstance> gameHistory = [];
 
     private static void Main()
     {
-        StartUp();
-        GameLoop();
-        ShutDown();
+        GameInstance game = StartUp();
+        GameLoop(game);
+        ShutDown(game);
     }
 
-    private static void GameLoop()
+    private static void GameLoop(GameInstance game)
     {
         while (true)
         {
-            PrintGame();
+            PrintGame(game);
             
-            var guess = AskForLetter();
-            guessHistory.Add(guess);
+            var guess = AskForLetter(game);
+            game.GuessHistory.Add(guess);
             bool guessWasCorrect = false;
 
-            for (var i = 0; i < secretWordArray.Length; i++)
+            for (var i = 0; i < game.SecretWordArray.Length; i++)
             {
-                if (guess == secretWordArray[i])
+                if (guess == game.SecretWordArray[i])
                 {
-                    revealedWordArray[i] = guess;
+                    game.RevealedWordArray[i] = guess;
                     guessWasCorrect = true;
                 }
             }
 
             if (!guessWasCorrect)
             {
-                numberOfMistakes++;
+                game.NumberOfMistakes++;
             }
 
-            if (CheckForWin())
+            if (CheckForWin(game))
             {
                 break;
             }
 
-            if (CheckForLoss())
+            if (CheckForLoss(game))
             {
-                revealedWordArray = secretWordArray;
+                game.RevealedWordArray = game.SecretWordArray;
                 break;
             }
         }
     }
 
-    private static void StartUp()
+    private static GameInstance StartUp()
     {
         // Reading scores from json if it exists
         
@@ -78,24 +70,30 @@ internal static class Program
 
         if (string.IsNullOrEmpty(scoresAsJsonString))
         {
-            scores = [];
+            gameHistory = [];
         }
         else
         {
-            scores = JsonSerializer.Deserialize<List<Score>>(scoresAsJsonString) ?? [];
+            gameHistory = JsonSerializer.Deserialize<List<GameInstance>>(scoresAsJsonString) ?? [];
         }
         
-        PrintGame();
-        
         Console.WriteLine();
+
+        GameInstance game = new GameInstance();
         
-        playerName = AskForUserName();
-        language = AskForLanguage();
+        game.PlayerName = AskForUserName();
+        game.Language = AskForLanguage();
         
-        secretWord = GetRandomWord();
-        revealedWord = new('*', secretWord.Length);
-        secretWordArray = secretWord.ToCharArray();
-        revealedWordArray = revealedWord.ToCharArray();
+        game.SecretWord = GetRandomWord(game.Language);
+        game.RevealedWord = new('*', game.SecretWord.Length);
+        game.SecretWordArray = game.SecretWord.ToCharArray();
+        game.RevealedWordArray = game.RevealedWord.ToCharArray();
+        
+        game.GuessHistory = [];
+        game.NumberOfGuesses = 0;
+        game.NumberOfMistakes = 0;
+
+        return game;
     }
     
     private static string AskForLanguage()
@@ -123,9 +121,9 @@ internal static class Program
         }
     }
 
-    private static string GetRandomWord()
+    private static string GetRandomWord(string lang)
     {
-        string[] dictionary = File.ReadAllLines(dictionaryLocation);
+        string[] dictionary = File.ReadAllLines(dictionaryLocation + lang + ".txt");
 
         while (true)
         {
@@ -141,45 +139,36 @@ internal static class Program
         }
     }
 
-    private static void ShutDown()
+    private static void ShutDown(GameInstance game)
     {
         // writing scores to json if the player did not lose
-        if (!CheckForLoss())
+        if (!CheckForLoss(game))
         {
-            Score s = new Score
-            {
-                Name = playerName,
-                Word = secretWord,
-                NumberOfGuesses = numberOfGuesses,
-                WordLength = secretWord.Length,
-                NumberOfMistakes = numberOfMistakes
-            };
-        
-            scores.Add(s);
+            gameHistory.Add(game);
 
-            string scoresAsJsonString = JsonSerializer.Serialize(scores);
+            string scoresAsJsonString = JsonSerializer.Serialize(gameHistory);
             File.WriteAllText(jsonLocation,scoresAsJsonString);
         }
 
-        PrintGame();
-        Console.WriteLine(CheckForLoss() ? "\nYou Lose..." : "\nYou Win!");
-        Console.WriteLine($"\nThanks for playing {playerName}");
+        PrintGame(game);
+        Console.WriteLine(CheckForLoss(game) ? "\nYou Lose..." : "\nYou Win!");
+        Console.WriteLine($"\nThanks for playing {game.PlayerName}");
         
         // sorting and printing scores if they exist
 
-        if (scores.Count > 0)
+        if (gameHistory.Count > 0)
         {
             Console.WriteLine();
             Console.WriteLine("Highscores:");
             
             // sorting by number of mistakes and then by the length of the word (longer words are easier)
-            List<Score> sortedScores = scores.OrderBy(o=>o.NumberOfMistakes)
-                .ThenBy(o=>o.WordLength)
+            List<GameInstance> sortedGames = gameHistory.OrderBy(o=>o.NumberOfMistakes)
+                .ThenBy(o=>o.SecretWordArray.Length)
                 .ToList();
 
-            foreach (Score score in sortedScores)
+            foreach (GameInstance g in sortedGames)
             {
-                Console.WriteLine(score);
+                Console.WriteLine(g);
             }
 
             Console.WriteLine();
@@ -192,16 +181,6 @@ internal static class Program
     {
         Console.WriteLine("Press any key to close");
         Console.ReadKey(true);
-    }
-
-    private static bool CheckForWin()
-    {
-        return revealedWordArray.SequenceEqual(secretWordArray);
-    }
-
-    private static bool CheckForLoss()
-    {
-        return numberOfMistakes >= 6;
     }
 
     private static string AskForUserName()
@@ -228,7 +207,7 @@ internal static class Program
         }
     }
 
-    private static char AskForLetter()
+    private static char AskForLetter(GameInstance game)
     {
         Console.Write("\nChoose a letter: ");
 
@@ -240,7 +219,7 @@ internal static class Program
             if (guess == null)
             {
                 Console.Clear();
-                PrintGame();
+                PrintGame(game);
                 Console.WriteLine();
                 Console.Write("Please select a single letter: ");
                 continue;
@@ -249,7 +228,7 @@ internal static class Program
             if (guess.Length != 1)
             {
                 Console.Clear();
-                PrintGame();
+                PrintGame(game);
                 Console.WriteLine();
                 Console.Write("Please select a single letter: ");
                 continue;
@@ -258,35 +237,46 @@ internal static class Program
             if (!char.IsLetter(guess[0]))
             {
                 Console.Clear();
-                PrintGame();
+                PrintGame(game);
                 Console.WriteLine();
                 Console.Write("Please select a single letter: ");
                 continue;
             }
             
             guess = guess.ToLower();
-            if (guessHistory.Contains(guess[0]))
+            if (game.GuessHistory.Contains(guess[0]))
             {
                 Console.Clear();
-                PrintGame();
+                PrintGame(game);
                 Console.WriteLine();
                 Console.Write("Letter has already been used. Try again: ");
                 continue;
             }
 
-            numberOfGuesses++;
+            game.NumberOfGuesses++;
             return guess[0];
         }
     }
+    
+    private static bool CheckForWin(GameInstance game)
+    {
+        return game.RevealedWordArray.SequenceEqual(game.SecretWordArray);
+    }
+    
+    private static bool CheckForLoss(GameInstance game)
+    {
+        return game.NumberOfMistakes >= 6;
+    }
 
     // it's a mess
-    private static void PrintGame()
+    private static void PrintGame(GameInstance game)
     {
         Console.Clear();
         
-        Console.WriteLine($"               HANGMAN            {language}");
+        Console.WriteLine($"               HANGMAN            {game.Language}");
         Console.WriteLine("------------------------------------");
-        PrintGuessHistory();
+        PrintGuessHistory(game);
+        
         Console.WriteLine();
         // 1st row of hangman
         Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -296,7 +286,7 @@ internal static class Program
         // 3rd row of hangman
         Console.Write(" H     ");
 
-        if (numberOfMistakes >= 1)
+        if (game.NumberOfMistakes >= 1)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -305,9 +295,9 @@ internal static class Program
         
         Console.ForegroundColor = ConsoleColor.White;
         
-        Console.Write(new string(' ', int.Max(2, 11 - revealedWordArray.Length / 2)));
+        Console.Write(new string(' ', int.Max(2, 11 - game.RevealedWordArray.Length / 2)));
         
-        PrintRevealedWord();
+        PrintRevealedWord(game);
         
         Console.Write("\n");
         
@@ -315,7 +305,7 @@ internal static class Program
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write(" H    ");
         
-        if (numberOfMistakes >= 3)
+        if (game.NumberOfMistakes >= 3)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -323,7 +313,7 @@ internal static class Program
         Console.Write("-");
         Console.ForegroundColor = ConsoleColor.DarkGray;
         
-        if (numberOfMistakes >= 2)
+        if (game.NumberOfMistakes >= 2)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -331,7 +321,7 @@ internal static class Program
         Console.Write("|");
         Console.ForegroundColor = ConsoleColor.DarkGray;
         
-        if (numberOfMistakes >= 4)
+        if (game.NumberOfMistakes >= 4)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -341,6 +331,7 @@ internal static class Program
         Console.ForegroundColor = ConsoleColor.White;
         
         // Keyboard is 24 characters wide total
+        // (11 letters wide + offset of 1 per row) x 2 to have gaps in between
         
         const string keyboardTop = "qwertyuiopå";
         const string keyboardMid = "asdfghjklöä";
@@ -350,7 +341,7 @@ internal static class Program
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write(" H    ");
         
-        if (numberOfMistakes >= 5)
+        if (game.NumberOfMistakes >= 5)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -358,7 +349,7 @@ internal static class Program
         Console.Write("/ ");
         Console.ForegroundColor = ConsoleColor.DarkGray;
         
-        if (numberOfMistakes >= 6)
+        if (game.NumberOfMistakes >= 6)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
         }
@@ -372,7 +363,7 @@ internal static class Program
 
         foreach (var letter in keyboardTop)
         {
-            if (guessHistory.Contains(letter))
+            if (game.GuessHistory.Contains(letter))
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
@@ -393,7 +384,7 @@ internal static class Program
         
         foreach (var letter in keyboardMid)
         {
-            if (guessHistory.Contains(letter))
+            if (game.GuessHistory.Contains(letter))
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
@@ -413,7 +404,7 @@ internal static class Program
         
         foreach (var letter in keyboardBot)
         {
-            if (guessHistory.Contains(letter))
+            if (game.GuessHistory.Contains(letter))
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
@@ -427,15 +418,15 @@ internal static class Program
         
     }
 
-    private static void PrintRevealedWord()
+    private static void PrintRevealedWord(GameInstance game)
     {
-        foreach (var c in revealedWordArray)
+        foreach (var c in game.RevealedWordArray)
         {
             if (c == '*')
             {
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
-            else if (guessHistory.Contains(c))
+            else if (game.GuessHistory.Contains(c))
             {
                 Console.ForegroundColor = ConsoleColor.Green;
             }
@@ -449,12 +440,19 @@ internal static class Program
         }
     }
 
-    private static void PrintGuessHistory()
+    private static void PrintGuessHistory(GameInstance game)
     {
-        Console.Write("Guesses: ");
-        foreach (var guess in guessHistory)
+        if (game.GuessHistory.Count < 1)
         {
-            Console.ForegroundColor = secretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
+            Console.Write("-");
+            return;
+        }
+        
+        Console.Write("Guesses: ");
+        
+        foreach (var guess in game.GuessHistory)
+        {
+            Console.ForegroundColor = game.SecretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
             Console.Write($"{guess} ");
             
             Console.ForegroundColor = ConsoleColor.White;
