@@ -13,21 +13,23 @@ internal static class Program
     private static List<char> guessHistory = [];
     private static string playerName = "player";
     private static string language = "en";
+    private static string dictionaryLocation = $"../../../../{language}.txt";
     private static string jsonLocation = "../../../../scores.json";
     private static List<Score> scores = [];
 
     private static void Main()
     {
         StartUp();
-        MainGameLoop();
+        GameLoop();
         ShutDown();
     }
 
-    private static void MainGameLoop()
+    private static void GameLoop()
     {
         while (true)
         {
             PrintGame();
+            
             var guess = AskForLetter();
             guessHistory.Add(guess);
             bool guessWasCorrect = false;
@@ -62,6 +64,7 @@ internal static class Program
     private static void StartUp()
     {
         // Reading scores from json if it exists
+        
         string? scoresAsJsonString;
 
         try
@@ -79,20 +82,22 @@ internal static class Program
         }
         else
         {
-            scores = JsonSerializer.Deserialize<List<Score>>(scoresAsJsonString);
+            scores = JsonSerializer.Deserialize<List<Score>>(scoresAsJsonString) ?? [];
         }
         
         PrintGame();
+        
         Console.WriteLine();
+        
         playerName = AskForUserName();
         language = AskForLanguage();
         
-        secretWord = GetRandomWord(language);
+        secretWord = GetRandomWord();
         revealedWord = new('*', secretWord.Length);
         secretWordArray = secretWord.ToCharArray();
         revealedWordArray = revealedWord.ToCharArray();
     }
-
+    
     private static string AskForLanguage()
     {
         string[] validLanguages = ["en", "sv", "fi"];
@@ -118,29 +123,17 @@ internal static class Program
         }
     }
 
-    private static string GetRandomWord(string lang)
+    private static string GetRandomWord()
     {
-        string[] dictionary;
-        
-        try
-        {
-            dictionary = File.ReadAllLines($"../../../../{lang}.txt");
-        }
-        catch (FileNotFoundException e)
-        {
-            dictionary = ["competence", "sequence", "numerical", "sunglasses", "jewelry"];
-        }
-        catch (Exception e)
-        {
-            dictionary = ["competence", "sequence", "numerical", "sunglasses", "jewelry"];
-            Console.WriteLine($"Something went wrong.\n{e}");
-        }
+        string[] dictionary = File.ReadAllLines(dictionaryLocation);
 
         while (true)
         {
+            // pick a ramdom word from the dictionary
             int i = Random.Shared.Next(dictionary.Length);
             string word = dictionary[i];
-
+            
+            // check that it contains only letters (e.g. no "x-ray") and that it is longer than 3 letters
             if (word.All(char.IsLetter) && word.Length > 3)
             {
                 return word;
@@ -186,7 +179,7 @@ internal static class Program
 
             foreach (Score score in sortedScores)
             {
-                Console.WriteLine($"    {score.Name}: {score.NumberOfMistakes} mistakes - {score.Word}");
+                Console.WriteLine(score);
             }
 
             Console.WriteLine();

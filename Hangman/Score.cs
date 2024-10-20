@@ -7,4 +7,9 @@ public class Score
     public int NumberOfGuesses { get; set; }
     public int NumberOfMistakes { get; set; }
     public int WordLength { get; set; }
+
+    public override string ToString()
+    {
+        return $"    {Name}: {NumberOfMistakes} mistakes - {Word}";
+    }
 }
