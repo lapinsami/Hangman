@@ -93,29 +93,43 @@ internal static class Program
         return game;
     }
     
-    private static string AskForLanguage()
+    private static void ShutDown(GameInstance game)
     {
-        string[] validLanguages = ["en", "sv", "fi"];
-        Console.Write("Language used for the dictionary (en, sv, fi): ");
-
-        while (true)
+        // writing scores to json if the player did not lose
+        if (!CheckForLoss(game))
         {
-            string? input = Console.ReadLine();
+            _gameHistory.Add(game);
 
-            if (input == null)
-            {
-                Console.Write("Try again: ");
-                continue;
-            }
-
-            if (!validLanguages.Contains(input))
-            {
-                Console.Write("Not a valid language. Try again: ");
-                continue;
-            }
-
-            return input;
+            string scoresAsJsonString = JsonSerializer.Serialize(_gameHistory);
+            File.WriteAllText(JsonFileLocation,scoresAsJsonString);
         }
+
+        PrintGame(game);
+        
+        Console.WriteLine(CheckForLoss(game) ? "\nYou Lose..." : "\nYou Win!");
+        Console.WriteLine($"\nThanks for playing {game.PlayerName}");
+        
+        // sorting and printing scores if they exist
+
+        if (_gameHistory.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("High scores:");
+            
+            // sorting by number of mistakes and then by the length of the word (longer words are easier)
+            List<GameInstance> sortedGames = _gameHistory.OrderBy(o=>o.NumberOfMistakes)
+                .ThenBy(o=>o.SecretWordArray.Length)
+                .ToList();
+
+            foreach (GameInstance g in sortedGames)
+            {
+                Console.WriteLine(g);
+            }
+
+            Console.WriteLine();
+        }
+        
+        //ConfirmExit();
     }
 
     private static string GetRandomWord(string lang)
@@ -145,44 +159,6 @@ internal static class Program
         }
     }
 
-    private static void ShutDown(GameInstance game)
-    {
-        // writing scores to json if the player did not lose
-        if (!CheckForLoss(game))
-        {
-            _gameHistory.Add(game);
-
-            string scoresAsJsonString = JsonSerializer.Serialize(_gameHistory);
-            File.WriteAllText(JsonFileLocation,scoresAsJsonString);
-        }
-
-        PrintGame(game);
-        Console.WriteLine(CheckForLoss(game) ? "\nYou Lose..." : "\nYou Win!");
-        Console.WriteLine($"\nThanks for playing {game.PlayerName}");
-        
-        // sorting and printing scores if they exist
-
-        if (_gameHistory.Count > 0)
-        {
-            Console.WriteLine();
-            Console.WriteLine("High scores:");
-            
-            // sorting by number of mistakes and then by the length of the word (longer words are easier)
-            List<GameInstance> sortedGames = _gameHistory.OrderBy(o=>o.NumberOfMistakes)
-                .ThenBy(o=>o.SecretWordArray.Length)
-                .ToList();
-
-            foreach (GameInstance g in sortedGames)
-            {
-                Console.WriteLine(g);
-            }
-
-            Console.WriteLine();
-        }
-        
-        ConfirmExit();
-    }
-
     private static void ConfirmExit()
     {
         Console.WriteLine("Press any key to close");
@@ -206,6 +182,31 @@ internal static class Program
             if (input.Length < 2)
             {
                 Console.Write("Name must be 2 characters or longer. Try again: ");
+                continue;
+            }
+
+            return input;
+        }
+    }
+    
+    private static string AskForLanguage()
+    {
+        string[] validLanguages = ["en", "sv", "fi"];
+        Console.Write("Language used for the dictionary (en, sv, fi): ");
+
+        while (true)
+        {
+            string? input = Console.ReadLine();
+
+            if (input == null)
+            {
+                Console.Write("Try again: ");
+                continue;
+            }
+
+            if (!validLanguages.Contains(input))
+            {
+                Console.Write("Not a valid language. Try again: ");
                 continue;
             }
 
@@ -284,11 +285,14 @@ internal static class Program
         PrintGuessHistory(game);
         
         Console.WriteLine();
+        
         // 1st row of hangman
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine(" H======    ");
+        
         // 2nd row of hangman
         Console.WriteLine(" H/    |    ");
+        
         // 3rd row of hangman
         Console.Write(" H     ");
 
@@ -388,7 +392,7 @@ internal static class Program
         
         Console.Write("  ");
         
-        foreach (var letter in keyboardMid)
+        foreach (char letter in keyboardMid)
         {
             if (game.GuessHistory.Contains(letter))
             {
@@ -408,7 +412,7 @@ internal static class Program
         
         Console.Write("   ");
         
-        foreach (var letter in keyboardBot)
+        foreach (char letter in keyboardBot)
         {
             if (game.GuessHistory.Contains(letter))
             {
@@ -426,24 +430,12 @@ internal static class Program
 
     private static void PrintRevealedWord(GameInstance game)
     {
-        foreach (var c in game.RevealedWordArray)
+        foreach (char c in game.RevealedWordArray)
         {
-            if (c == '*')
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-            }
-            else if (game.GuessHistory.Contains(c))
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-            }
-            
+            Console.ForegroundColor = game.GuessHistory.Contains(c) ? ConsoleColor.Green : ConsoleColor.DarkGray;
             Console.Write(c);
-            Console.ForegroundColor = ConsoleColor.White;
         }
+        Console.ForegroundColor = ConsoleColor.White;
     }
 
     private static void PrintGuessHistory(GameInstance game)
@@ -454,8 +446,7 @@ internal static class Program
         {
             Console.ForegroundColor = game.SecretWordArray.Contains(guess) ? ConsoleColor.Green : ConsoleColor.DarkRed;
             Console.Write($"{guess} ");
-            
-            Console.ForegroundColor = ConsoleColor.White;
         }
+        Console.ForegroundColor = ConsoleColor.White;
     }
 }
