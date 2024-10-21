@@ -5,8 +5,8 @@ namespace Hangman;
 internal static class Program
 {
     // relative paths from Hangman/Hangman/bin/Debug/net8.0/
-    private const string DictionaryLocation = "../../../../"; // file name missing because it depends on a variable
-    private const string JsonLocation = "../../../../scores.json";
+    private const string DictionaryDirectoryLocation = "../../../../";
+    private const string JsonFileLocation = "../../../../scores.json";
     private static List<GameInstance> _gameHistory = [];
 
     private static void Main()
@@ -61,7 +61,7 @@ internal static class Program
 
         try
         {
-            scoresAsJsonString = File.ReadAllText(JsonLocation);
+            scoresAsJsonString = File.ReadAllText(JsonFileLocation);
         }
         catch (FileNotFoundException e)
         {
@@ -128,7 +128,7 @@ internal static class Program
         
         try
         {
-            dictionary = File.ReadAllLines(DictionaryLocation + lang + ".txt");
+            dictionary = File.ReadAllLines(DictionaryDirectoryLocation + lang + ".txt");
         }
         catch (FileNotFoundException e)
         {
@@ -157,7 +157,7 @@ internal static class Program
             _gameHistory.Add(game);
 
             string scoresAsJsonString = JsonSerializer.Serialize(_gameHistory);
-            File.WriteAllText(JsonLocation,scoresAsJsonString);
+            File.WriteAllText(JsonFileLocation,scoresAsJsonString);
         }
 
         PrintGame(game);
