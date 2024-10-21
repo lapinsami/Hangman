@@ -90,10 +90,6 @@ internal static class Program
         game.RevealedWordArray = new char[game.SecretWordArray.Length];
         Array.Fill(game.RevealedWordArray, '*');
         
-        game.GuessHistory = [];
-        game.NumberOfGuesses = 0;
-        game.NumberOfMistakes = 0;
-
         return game;
     }
     
