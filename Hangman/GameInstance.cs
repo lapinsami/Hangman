@@ -2,8 +2,8 @@ namespace Hangman;
 
 public class GameInstance
 {
-    public string PlayerName { get; set; } = "player";
-    public string Language { get; set; } = "en";
+    public string PlayerName { get; set; } = "";
+    public string Language { get; set; } = "";
 
     public char[] SecretWordArray { get; set; } = [];
     public char[] RevealedWordArray { get; set; } = [];
