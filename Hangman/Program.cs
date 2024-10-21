@@ -81,6 +81,8 @@ internal static class Program
 
         GameInstance game = new();
         
+        PrintGame(game);
+        
         game.PlayerName = AskForUserName();
         game.Language = AskForLanguage();
         
@@ -122,8 +124,17 @@ internal static class Program
 
     private static string GetRandomWord(string lang)
     {
-        string[] dictionary = File.ReadAllLines(DictionaryLocation + lang + ".txt");
-
+        string[] dictionary;
+        
+        try
+        {
+            dictionary = File.ReadAllLines(DictionaryLocation + lang + ".txt");
+        }
+        catch (FileNotFoundException e)
+        {
+            dictionary = ["competence", "sequence", "numerical", "sunglasses", "jewelry"];
+        }
+        
         while (true)
         {
             // pick a ramdom word from the dictionary

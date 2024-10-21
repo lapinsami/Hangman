@@ -14,6 +14,6 @@ public class GameInstance
 
     public override string ToString()
     {
-        return $"    {PlayerName}: {NumberOfMistakes} mistakes - {new string(SecretWordArray)}";
+        return $"    {PlayerName}: {NumberOfMistakes} mistakes - {new string(SecretWordArray)} [{Language}]";
     }
 }
