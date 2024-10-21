@@ -10,7 +10,7 @@ public class GameInstance
 
     public int NumberOfGuesses { get; set; }
     public int NumberOfMistakes { get; set; }
-    public List<char> GuessHistory { get; set; }  = [];
+    public List<char> GuessHistory { get; }  = [];
 
     public override string ToString()
     {
